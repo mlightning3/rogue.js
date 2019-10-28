@@ -1,0 +1,14 @@
+{
+  "name": "rogue.js",
+  "version": "1.0.0",
+  "description": "Multiplayer roguelike game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Kohls",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "ws": "^7.2.0"
+  }
+}
