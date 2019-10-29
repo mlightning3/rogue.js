@@ -9,6 +9,7 @@
   "author": "Matt Kohls",
   "license": "GPL-3.0-only",
   "dependencies": {
+    "uuid": "^3.3.3",
     "ws": "^7.2.0"
   }
 }
