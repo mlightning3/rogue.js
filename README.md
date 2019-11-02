@@ -17,4 +17,10 @@ GPL3
 
 ### Libraries and Resources Used
 
+#### Libraries
+
 [ws](https://github.com/websockets/ws) a Node.js WebSocket library. MIT
+
+#### Artwork
+
+[minirogue-all.png](https://forums.tigsource.com/index.php?topic=14166.0) by Arachne, [CC-BY-SA](https://creativecommons.org/licenses/by-sa/4.0/)

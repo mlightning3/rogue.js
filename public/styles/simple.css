@@ -1,0 +1,230 @@
+:root {
+	--color_0: rgba(255, 255, 255, 0.75);
+	--color_litegray: rgba(178, 178, 178, 0.8);
+	--color_btn: #222;
+	--color_text: #fff;
+	--color_shadow: #000;
+	--color_bg: #4c4c4c;
+	--color_hover_bg: #ccc;
+	--color_hover_text: #222;
+}
+
+* { margin: 0;
+	padding: 0; }
+
+.center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+body {
+	width: 96%;
+	background-color: white;
+	margin: 15px auto; 
+	padding: 20px; }
+
+section, aside, h1, h2, h3, p {
+	margin: 0;
+	padding: 0;
+}
+
+section, aside {
+	margin-bottom: 1em;
+}
+
+img {
+	border-radius: 8px;
+	max-width: 100%;
+	height: auto;
+	margin-bottom: .5em;
+}
+
+p {
+	font-size: 95%;
+	padding-bottom: .5em;
+	line-height: 130%;
+}
+
+table, th, td {
+	border: 1px solid black;
+}
+
+th, td {
+	padding: 10px;
+	text-align: center;
+}
+
+canvas {
+	border: 1px solid gray;
+}
+
+div {
+	padding: 15px;
+}
+
+#nav_menu ul {
+	list-style: none;
+	position: relative; }
+
+#nav_menu ul li {
+	float: left;
+}
+#nav_menu ul ul {
+	display: none;         /* Don't display submenu until hover of the li element */
+	position: absolute;
+	top: 100%;             /* Position the submenu at the bottom of the main menu */
+}
+#nav_menu ul ul li {
+	float: none;           /* Display the submenus vertically */
+	position: relative;    /* So the second submenu can be positioned within the first submenu */
+}
+#nav_menu ul ul li ul {
+	position: absolute;
+	left: -100%;           /* Position the second submenu at the left side of the li element */ 
+	top: 0;                /* Position the second submenu at the top of the li element */
+}
+#nav_menu ul li:hover > ul {
+	display: block;        /* Display the submenu on hover of the li element */
+}
+#nav_menu ul::after {
+	content: "";
+	clear: both;
+	display: block;
+}
+
+/* The styles for the formatting of the multi-tier navigation menu */
+#nav_menu ul {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}
+#nav_menu ul li {
+	width: 25%;
+}
+#nav_menu ul li a {
+	text-align: center;
+	display: block;
+	padding: 1em 0;
+	text-decoration: none;
+	background-color: var(--color_bg);
+	color: var(--color_text);
+	font-weight: bold;
+}
+
+#nav_menu ul li a.current {
+	color: yellow;
+}
+#nav_menu ul li a:hover, #nav_menu ul li a:focus {
+	background-color: var(--color_hover_bg);
+}
+#nav_menu ul li:hover ul {
+	width: 100%;
+}
+#nav_menu ul li:hover ul li a {
+	display: block;
+	width: 178px;
+	text-align: center;
+}
+
+#sidebar {
+	margin: 0;
+	padding: 10px;
+	background-color: var(--color_litegray);
+	right: 0;
+	position: fixed; }
+
+main {
+	width: 76%; 
+	float: left; }
+
+footer {
+	clear: both;
+	width: 100%;
+	padding-top: .7em;
+}
+footer p {
+	font-size: 80%;
+	text-align: center;
+}
+
+.slicknav_menu {
+	font-size: 16px;
+	box-sizing: border-box;
+	background: var(--color_bg);
+	padding: 5px;
+}
+.slicknav_menu .slicknav_menutxt {
+	color: var(--color_text);
+	font-weight: bold;
+	text-shadow: 0 1px 3px var(--color_shadow);
+}
+.slicknav_menu .slicknav_icon-bar {
+	background-color: var(--color_text);
+}
+.slicknav_btn {
+	margin: 5px 5px 6px;
+	text-decoration: none;
+	text-shadow: 0 1px 1px var(--color_0);
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	background-color: var(--color_btn);
+}
+.slicknav_nav {
+	color: var(--color_text);
+	margin: 0;
+	padding: 0;
+	font-size: 0.875em;
+	list-style: none;
+	overflow: hidden;
+}
+.slicknav_menu ul {
+	list-style: none;
+	overflow: hidden;
+	padding: 0;
+	margin: 0 0 0 20px;
+}
+.slicknav_menu .slicknav_row {
+	padding: 5px 10px;
+	margin: 2px 5px;
+}
+.slicknav_menu .slicknav_row:hover {
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	background: var(--color_hover_bg);
+	color: var(--color_text);
+}
+.slicknav_menu a {
+	padding: 5px 10px;
+	margin: 2px 5px;
+	text-decoration: none;
+	color: var(--color_text);
+}
+.slicknav_menu a:hover {
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	background: var(--color_hover_bg);
+	color: var(--color_hover_text);
+}
+.slicknav_menu .slicknav_txtnode {
+	margin-left: 15px;
+}
+.slicknav_menu .slicknav_item a {
+	padding: 0;
+	margin: 0;
+}
+.slicknav_menu .slicknav_parent-link a {
+	padding: 0;
+	margin: 0;
+}
+.slicknav_brand {
+	color: var(--color_text);
+	font-size: 18px;
+	line-height: 30px;
+	padding: 7px 12px;
+	height: 44px;
+}
