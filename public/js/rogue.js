@@ -15,6 +15,18 @@ function Sprite(x, y, size) {
 	this.size = size;
 }
 
+var border = [
+	new Sprite(13, 9, 1),// Top Right
+	new Sprite(12, 10, 1),// Top Left
+	new Sprite(11, 9, 1),// Bottom Right
+	new Sprite(9, 9, 1),// Bottom left
+	new Sprite(12, 12, 1),// Right
+	new Sprite(12, 9, 1),// Left
+	new Sprite(11, 12, 1),// Top
+	new Sprite(10, 9, 1)// Bottom
+];
+var paper = new Sprite(13, 12, 1);
+
 var nothing = new Sprite(0, 0, 1);
 var tile = new Sprite(10, 12, 1);
 var dirt = new Sprite(10, 1, 1);
@@ -101,6 +113,8 @@ var robe = [
 ];
 
 var armor = new Sprite(4, 5, 1);
+var heart = new Sprite(7, 9, 1);
+var shield = new Sprite(6, 9, 1);
 
 var player = [
 	new Sprite(5, 5, 1),
@@ -169,8 +183,51 @@ function drawInitialBoard() {
 		drawSprite(wall[3], 63, j);
 	}
 	context.drawImage(this, 0, 0);
+
+	drawPlayerInfo();
 }
 
+/**
+ * Draws out the player info on the side of the screen
+ *
+ */
+function drawPlayerInfo() {
+	var boxWidth = 10;
+
+	for(var i = 0; i < boxWidth; i++) {
+		for(var j = 0; j < 51; j++) {
+			if(i != 0 && j != 0) {
+				drawSprite(paper, 63 - i, j);
+			}
+			if(i == 0) {
+				drawSprite(border[5], 63, j);
+				drawSprite(border[4], 63 - boxWidth, j);
+			}
+		}
+		drawSprite(border[6], 63 - i, 0);
+		drawSprite(border[7], 63 - i, 51);
+	}
+	drawSprite(border[1], 63 - boxWidth, 0);
+	drawSprite(border[0], 63, 0);
+	drawSprite(border[3], 63 - boxWidth, 51);
+	drawSprite(border[2], 63, 51);
+
+	drawSprite(heart, 63 - boxWidth + 2, 8);
+	drawSprite(shield, 63 - boxWidth + 2, 8);
+
+
+	context.font = "8px";
+	context.strokeText("Player", (63 - boxWidth + 2) * 8, 16);
+	context.strokeText("Info", (63 - boxWidth + 6) * 8, 32);
+}
+
+/**
+ * Draws a sprite onto the gameboard at the given location
+ *
+ * @param sprite The {@code Sprite} to draw
+ * @param x The X location to draw to
+ * @param y The Y location to draw to
+ */
 function drawSprite(sprite, x, y) {
 	context.drawImage(spritemap, sprite.x * 8, sprite.y * 8, 8 * sprite.size, 8 * sprite.size, x * 8, y * 8, 8 * sprite.size, 8 * sprite.size);
 }
