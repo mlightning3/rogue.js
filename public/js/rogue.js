@@ -70,6 +70,7 @@ var robe = new Sprite(8, 46, 16, 16);
 var armor = new Sprite(6, 46, 16, 16);
 var shield = new Sprite(10, 45, 16, 16);
 
+var ac = new Sprite(7, 56, 16, 16);
 var heart = new Sprite(7, 55, 16, 16);
 
 /** Mobs **/
@@ -154,11 +155,37 @@ function drawPlayerInfo() {
 	drawSprite(border[2], 31, 25, false);
 
 	drawSprite(heart, 31 - boxWidth + 2, 7, false);
-	drawSprite(shield, 31 - boxWidth + 2, 8, false);
+	drawSprite(ac, 31 - boxWidth + 2, 8, false);
 
 	renderText("Player  Info", 31 - boxWidth + 2, 1);
+	renderText("Str", 31 - boxWidth + 2, 3);
+	renderText("Dex", 31 - boxWidth + 2, 4);
+	renderText("Con", 31 - boxWidth + 2, 5);
+	renderText("Wis", 31 - boxWidth + 6, 3);
+	renderText("Int", 31 - boxWidth + 6, 4);
+	renderText("Cha", 31 - boxWidth + 6, 5);
+	renderText("Lvl", 31 - boxWidth + 6, 7);
+	renderText("Flr", 31 - boxWidth + 6, 8);
+	renderText("Equipped", 31 - boxWidth + 2, 10);
+	renderText("Carried", 31 - boxWidth + 2, 15);
+	
 	renderText("100", 31 - boxWidth + 3, 7);
 	renderText("15", 31 - boxWidth + 3, 8);
+	renderText("10", 31 - boxWidth + 4, 3);
+	renderText("10", 31 - boxWidth + 4, 4);
+	renderText("10", 31 - boxWidth + 4, 5);
+	renderText("10", 31 - boxWidth + 8, 3);
+	renderText("10", 31 - boxWidth + 8, 4);
+	renderText("10", 31 - boxWidth + 8, 5);
+	renderText("1", 31 - boxWidth + 8, 7);
+	renderText("2", 31 - boxWidth + 8, 8);
+	drawSprite(sword, 31 - boxWidth + 3, 12, false);
+	drawSprite(arrow, 31 - boxWidth + 6, 12, false);
+	drawSprite(helmet, 31 - boxWidth + 3, 13, false);
+	drawSprite(armor, 31 - boxWidth + 6, 13, false);
+	drawSprite(potion, 31 - boxWidth + 3, 17, false);
+	drawSprite(scroll, 31 - boxWidth + 6, 17, false);
+	drawSprite(shield, 31 - boxWidth + 3, 18, false);
 }
 
 /**
