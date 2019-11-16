@@ -8,6 +8,7 @@
  */
 
 var gamemap = {};
+var player = {};
 
 function Sprite(x, y, width, height) {
 	this.x = x;
@@ -100,6 +101,58 @@ var symbol = new Sprite(2, 64, 8, 16);
 var space = new Sprite(1, 59, 8, 16);
 
 /** Client Logic **/
+
+const messages = document.querySelector('#messages');
+const joinGame = document.querySelector('#joingame');
+const leaveGame = document.querySelector('#leavegame');
+const wsButton = document.querySelector('#wsButton');
+const wsSendButton = document.querySelector('#wsSendButton');
+let websocket;
+
+/**
+ * Show messages from the server
+ */
+function showMessage(message) {
+    messages.textContent += `\n${message}`;
+    messages.scrollTop = messages.scrollHeight;
+}
+
+joinGame.onclick = function() {
+	// TODO if we need this
+};
+
+leaveGame.onclick = function() {
+	// TODO if we need this
+};
+
+wsButton.onclick = function() {
+	if (websocket) {
+		websocket.onerror = websocket.onopen = websocket.onclose = null;
+		websocket.close();
+    }
+
+    websocket = new WebSocket(`ws://localhost:8080`);
+    websocket.onerror = function() {
+		showMessage('WebSocket error');
+    };
+    websocket.onopen = function() {
+		showMessage('WebSocket connection established');
+    };
+    websocket.onclose = function() {
+		showMessage('WebSocket connection closed');
+		websocket = null;
+    };
+};
+
+wsSendButton.onclick = function() {
+    if (!websocket) {
+		showMessage('No WebSocket connection');
+		return;
+    }
+
+    websocket.send('Hello World!');
+    showMessage('Sent "Hello World!"');
+};
 
 const canvas = document.getElementById('gameboard');
 const context = canvas.getContext('2d');
