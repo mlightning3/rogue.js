@@ -42,6 +42,7 @@ var wall = [
 
 var stairsdown = new Sprite(12, 26, 16, 16);
 var starisup = new Sprite(13, 26, 16, 16);
+var tomb = new Sprite(2, 27, 16, 16);
 
 var water = new Sprite(8, 34, 16, 16);
 
@@ -59,6 +60,7 @@ var book = new Sprite(10, 49, 16, 16);
 var mace = new Sprite(13, 3, 1);
 var dagger = new Sprite(2, 45, 16, 16);
 var sword = new Sprite(3, 45, 16, 16);
+var staff = new Sprite(2, 49, 16, 16);
 var axe = new Sprite(4, 45, 16, 16);
 var club = new Sprite(7, 45, 16, 16);
 var hammer = new Sprite(8, 45, 16, 16);

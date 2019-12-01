@@ -23,4 +23,5 @@ GPL3
 
 #### Artwork
 
-[minirogue-all.png](https://forums.tigsource.com/index.php?topic=14166.0) by Arachne, [CC-BY-SA](https://creativecommons.org/licenses/by-sa/4.0/)
+Original sprites based on
+[scroll-o-sprites.png](https://imgur.com/a/uHx4k) by Quale, [CC-BY-SA](https://creativecommons.org/licenses/by-sa/3.0/)
