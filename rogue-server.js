@@ -23,6 +23,18 @@ function genStat() {
 	return value;
 }
 
+class Location {
+	constructor(x, y, floor) {
+		this.x = x;
+		this.y = y;
+		this.floor = floor;
+	}
+
+	get x { return this.x; }
+	get y { return this.y; }
+	get floor { return this.floor; }
+}
+
 class Item {
 	constructor(bonus, type) {
 		this.bonus = bonus;
@@ -72,6 +84,7 @@ class Mob {
 		this.intelligence = intelligence;
 		this.wisdom = wisdom;
 		this.level = level;
+		this.location = location;
 		this.xp = 0;
 		this.hp = level * getBonus(constitution) + Math.floor(Math.random() * 6) * level;
 		this.hpMax = this.hp;
@@ -86,7 +99,7 @@ class Mob {
 		if(this.xp >= 100) {
 			this.xp = 0;
 			this.level += 1;
-			this.hp += getBonus(this.constitution) + Math.floor(Math.random() * 6);
+			this.hpMax += getBonus(this.constitution) + Math.floor(Math.random() * 6);
 		}
 	}
 
@@ -130,6 +143,14 @@ class Mob {
 
 	set hp(value) {
 		this.hp = value;
+	}
+
+	get location() {
+		return this.location;
+	}
+
+	set location(value) {
+		this.location = value;
 	}
 
 	set action(value) {
@@ -207,6 +228,7 @@ class Mob {
 /** Turn generation **/
 
 var mobs = [];
+var dead = [];
 
 /**
  * Generates the turn order by placing the index of the mob into an array.
@@ -229,33 +251,64 @@ function getInititive() {
 	return init
 }
 
+function attack(mobA, mobB, type) {
+	var attack = mobs[mobA].attack(type);
+	var defence;
+	if(type == "staff") {
+		defence = mobs[mobB].spellResist;
+	} else if(type == "weapon") {
+		defence = mobs[mobB].ac;
+	}
+	if(attack >= defence) {
+		mobs[mobB].hp = mobs[mobB].hp - mobs[mobA].damage(type);
+		var xp = 1;
+		if(mobs[mobB].hp < 0 && dead.includes(mobB) == false) {
+			dead.push(mobB);
+			xp = 10;
+		}
+		mobs[mobA].addXP(xp);
+	}
+}
+
+function move(mob, dir) {
+	
+
+}
+
+function cast(mob, dir) {
+
+}
+
 function performActions(init) {
 	for(var i = init.length - 1; i > -1; i--) {
 		for(var j = 0; j < init[i].length; j++) {
+			var mob = init[i][j];
 			var message = "";
-			switch(mobs[init[i][j]].action.type) {
-			case 'wait':
-				message = "You sit";
-				break;
-			case 'move':
-
-				break;
-			case 'cast':
-
-				break;
-			case 'drink':
-				message = mobs[init[i][j]].drinkPotion();
-				break;
-			case 'pick':
-				//message = mobs[init[i][j]].pickUp();
-				break;
-			case 'drop':
-				message = "Item dropped";
-				mobs[init[i][j]].drop(mobs[init[i][j]].action.message);
-			default:
-				break;
+			if(mobs[mob].hp > 0) {
+				switch(mobs[mob].action.type) {
+				case 'wait':
+					message = "You sit";
+					break;
+				case 'move':
+					move(mob, mobs[mob].action.message);
+					break;
+				case 'cast':
+					cast(mob, mobs[mob].action.message);
+					break;
+				case 'drink':
+					message = mobs[mob].drinkPotion();
+					break;
+				case 'pick':
+					//message = mobs[init[i][j]].pickUp();
+					break;
+				case 'drop':
+					message = "Item dropped";
+					mobs[mob].drop(mobs[mob].action.message);
+				default:
+					break;
+				}
 			}
-			mobs[init[i][j]].action = new Action('done', message);
+			mobs[mob].action = new Action('done', message);
 		}
 	}
 }
@@ -266,6 +319,7 @@ function sendResults() {
 
 
 function genTurn() {
+	dead = new Array();
 
 	var init = getInititive();
 	performActions(init);
