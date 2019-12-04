@@ -30,9 +30,12 @@ class Location {
 		this.floor = floor;
 	}
 
-	get x { return this.x; }
-	get y { return this.y; }
-	get floor { return this.floor; }
+	get x() { return this.x; }
+	set x(value) { this.x = value; }
+	get y() { return this.y; }
+	set y(value) { this.y = value; }
+	get floor() { return this.floor; }
+	set floor(value) { this.floor = value; }
 }
 
 class Item {
@@ -229,6 +232,7 @@ class Mob {
 
 var mobs = [];
 var dead = [];
+const floors = require('./floors.json');
 
 /**
  * Generates the turn order by placing the index of the mob into an array.
@@ -271,8 +275,55 @@ function attack(mobA, mobB, type) {
 }
 
 function move(mob, dir) {
-	
-
+	var location = mobs[mob].location;
+	switch(dir) {
+	case 'w':
+		location.x = location.x - 1;
+		break;
+	case 'a':
+		location.y = location.y - 1;
+		break;
+	case 's':
+		location.y = location.y + 1;
+		break;
+	case 'd':
+		location.x = location.x + 1;
+		break;
+	case '.':
+		var symbol = floors[location.floor].charAt(location.y * 40 + location.x);
+		if(symbol == '>') {
+			location.floor = location.floor + 1;
+			if(location.floor > floors.length - 1) {
+				return "Already at bottom floor";
+			}
+			mobs[mob].location = location;
+			return "Go down the stairs";
+		} else if(symbol == '<') {
+			location.floor = location.floor - 1;
+			if(location.floor < 0) {
+				return "Already at top floor";
+			}
+			mobs[mob].location = location;
+			return "Go up the stairs";
+		}
+		break;
+	default:
+		break;
+	}
+	if(location.x < 0 || location.x > 99 || location.y < 0 || location.y > 39) {
+		return "Hit a wall";
+	}
+	if(floors[location.floor].charAt(location.y * 40 + location.x) == '*') {
+		return "Hit a wall";
+	}
+	for(var i = 0; i < mobs.length; i++) {
+		if(mobs[i].location.floor == location.floor) {
+			if(mobs[i].location.x == location.x && mobs[i].location.y == location.y) {
+				return attack(mob, i, "weapon");
+			}
+		}
+	}
+	mobs[mob].location = location;
 }
 
 function cast(mob, dir) {
