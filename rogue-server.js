@@ -443,6 +443,10 @@ function performActions(init) {
  * @param character The mob the player is in charge of
  */
 function buildPlayerMsg(character) {
+	return buildTurnMsg(character, ",\"mobs\":[]");
+}
+
+function buildTurnMsg(character, mobmsg) {
 	var local = character.location.floor;
 	var message = "{\"map\":\"" + floors[local] + "\",";
 	message = message + character.stats();
@@ -451,6 +455,7 @@ function buildPlayerMsg(character) {
 	} else {
 		message = message + ",\"msg\":\"\"";
 	}
+	message += mobmsg;
 	return message + "}";
 }
 
@@ -458,10 +463,18 @@ function buildPlayerMsg(character) {
  * Send out action results to all players
  */
 function sendResults() {
+	var mobmsg = ",\"mobs\":[";
+	for(var i = 0; i < mobs.length; i++) {
+		mobmsg += "{\"x\":" + mobs[i].location.x + ",\"y\":" + mobs[i].location.y + ",\"floor\":" + mobs[i].location.floor + "}";
+		if(i != mobs.length - 1) {
+			mobmsg += ",";
+		}
+	}
+	mobmsg += "]";
 	for(var i = 0; i < mobs.length; i++) {
 		if(players.has(mobs[i].uuid)) {
 			console.log(new Date().toUTCString() + ' | sending turn data to ' + mobs[i].uuid);
-			players.get(mobs[i].uuid).send(buildPlayerMsg(mobs[i]));
+			players.get(mobs[i].uuid).send(buildTurnMsg(mobs[i], mobmsg));
 		}
 	}
 }

@@ -135,6 +135,7 @@ function showMessage(message) {
 function parseMessage(message) {
 	var msg = JSON.parse(message);
 	map = msg.map;
+	mobs = msg.mobs;
 	player = new Player(msg.strength, msg.dexterity, msg.constitution, msg.intelligence, msg.wisdom, msg.level, msg.x, msg.y, msg.floor, msg.hp, msg.ac, msg.potions, msg.armor, msg.weapon, msg.staff);
 	if(msg.msg != "" && msg.msg != "undefined") {
 		showMessage(msg.msg);
@@ -232,6 +233,7 @@ spritemap.onload = drawInitialBoard;
 spritemap.src = 'scroll-o-sprites-edited.png';
 
 var gamemap;
+var mobs;
 var player = new Player(10, 10, 10, 10, 10, 1, 0, 0, 1, 100, 15, 0, "none", "none", "none");
 
 function drawInitialBoard() {
@@ -297,6 +299,14 @@ function drawMap() {
 		}
 		localY = 0;
 		localX++;
+	}
+
+	for(var i = 0; i < mobs.length; i++) {
+		if(mobs[i].floor == player.floor) {
+			var mobx = mobs[i].x - player.x;
+			var moby = mobs[i].y - player.y;
+			drawSprite(players[1], 11 + mobx, 13 + moby, false);
+		}
 	}
 
 	drawSprite(players[0], 11, 13, false);
