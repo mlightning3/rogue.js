@@ -40,41 +40,41 @@ class Location {
 
 class Item {
 	constructor(bonus, type) {
-		this.bonus = bonus;
-		this.type = type;
+		this._bonus = bonus;
+		this._type = type;
 	}
 
 	get name() {
 		var name = "";
-		if(this.bonus > 0) {
-			name = name + "+" + this.bonus;
+		if(this._bonus > 0) {
+			name = name + "+" + this._bonus;
 		} else if(this.bonus < 0) {
-			name = name + "-" +this. bonus;
+			name = name + "-" +this._bonus;
 		}
 		return name;
 	}
 
 	get bonus() {
-		return this.bonus;
+		return this._bonus;
 	}
 
 	get type() {
-		return this.type;
+		return this._type;
 	}
 }
 
 class Action {
 	constructor(type, message) {
-		this.type = type;
-		this.message = message;
+		this._type = type;
+		this._message = message;
 	}
 
 	get type() {
-		return this.type;
+		return this._type;
 	}
 
 	get message() {
-		return this.message;
+		return this._message;
 	}
 }
 	
@@ -301,7 +301,7 @@ function getInititive() {
 		init[i] = new Array();
 	}
 	for(var i = 0; i < mobs.length; i++) {
-		var place = mobs[i].inititive;
+		var place = mobs[i].inititive();
 		if(place > 19) {
 			place = 19;
 		} else if(place < 0) {
@@ -319,9 +319,9 @@ function attack(mobA, mobB, type) {
 	var attack = mobs[mobA].attack(type);
 	var defence;
 	if(type == "staff") {
-		defence = mobs[mobB].spellResist;
+		defence = mobs[mobB].spellResist();
 	} else if(type == "weapon") {
-		defence = mobs[mobB].ac;
+		defence = mobs[mobB].ac();
 	}
 	if(attack >= defence) {
 		mobs[mobB].hp = mobs[mobB].hp - mobs[mobA].damage(type);
@@ -331,20 +331,22 @@ function attack(mobA, mobB, type) {
 			xp = 10;
 		}
 		mobs[mobA].addXP(xp);
+		return "You attack the mob";
 	}
+	return "You miss the mob";
 }
 
 /** 
  * Moves a mob in the direction it wishes to that space if available or starts a fight
  */
 function move(mob, dir) {
-	var location = mobs[mob].location;
+	var location = new Location(mobs[mob].location.x, mobs[mob].location.y, mobs[mob].location.floor);
 	switch(dir) {
 	case 'w':
-		location.x = location.x - 1;
+		location.y = location.y - 1;
 		break;
 	case 'a':
-		location.y = location.y - 1;
+		location.x = location.x - 1;
 		break;
 	case 's':
 		location.y = location.y + 1;
@@ -353,7 +355,7 @@ function move(mob, dir) {
 		location.x = location.x + 1;
 		break;
 	case '.':
-		var symbol = floors[location.floor].charAt(location.y * 40 + location.x);
+		var symbol = floors[location.floor].charAt(location.y * 100 + location.x);
 		if(symbol == '>') {
 			location.floor = location.floor + 1;
 			if(location.floor > floors.length - 1) {
@@ -376,7 +378,7 @@ function move(mob, dir) {
 	if(location.x < 0 || location.x > 99 || location.y < 0 || location.y > 39) {
 		return "Hit a wall";
 	}
-	if(floors[location.floor].charAt(location.y * 40 + location.x) == '*') {
+	if(floors[location.floor].charAt(location.y * 100 + location.x) == '*') {
 		return "Hit a wall";
 	}
 	for(var i = 0; i < mobs.length; i++) {
@@ -402,12 +404,15 @@ function performActions(init) {
 			var mob = init[i][j];
 			var message = "";
 			if(mobs[mob].hp > 0) {
+				if(mobs[mob].action == null) {
+					message = "You sit";
+				}
 				switch(mobs[mob].action.type) {
 				case 'wait':
 					message = "You sit";
 					break;
 				case 'move':
-					move(mob, mobs[mob].action.message);
+					message = move(mob, mobs[mob].action.message);
 					break;
 				case 'cast':
 					cast(mob, mobs[mob].action.message);
@@ -423,6 +428,7 @@ function performActions(init) {
 					message = "Item dropped";
 					mobs[mob].drop(mobs[mob].action.message);
 				default:
+					message = "You sit";
 					break;
 				}
 			}
@@ -441,7 +447,7 @@ function buildPlayerMsg(character) {
 	var message = "{\"map\":\"" + floors[local] + "\",";
 	message = message + character.stats();
 	if(character.action != null) {
-		message = message + ",\"msg\":" + character.action.message;
+		message = message + ",\"msg\":\"" + character.action.message + "\"";
 	} else {
 		message = message + ",\"msg\":\"\"";
 	}
@@ -454,6 +460,7 @@ function buildPlayerMsg(character) {
 function sendResults() {
 	for(var i = 0; i < mobs.length; i++) {
 		if(players.has(mobs[i].uuid)) {
+			console.log(new Date().toUTCString() + ' | sending turn data to ' + mobs[i].uuid);
 			players.get(mobs[i].uuid).send(buildPlayerMsg(mobs[i]));
 		}
 	}
@@ -472,12 +479,20 @@ function cleanDungeon() {
  * All the steps that need to be taken in a turn
  */
 function genTurn() {
+	if(clock != null) {
+		clearTimeout(clock);
+	}
+	console.log(new Date().toUTCString() + ' | generating turn...');
 	dead = new Array();
-
 	var init = getInititive();
 	performActions(init);
 	sendResults();
 	cleanDungeon();
+	console.log(new Date().toUTCString() + ' | turn generation done');
+	if(mobs.length > 0) {
+		clock = setInterval(genTurn, 30000);
+		console.log(new Date().toUTCString() + ' | resetting clock...');
+	}
 }
 
 
@@ -491,6 +506,8 @@ const uuid = require('uuid/v4');
 const players = new Map();
 const device = new Map();
 
+var clock = null;
+
 const httpServer = http.createServer();
 const wsServer = new WebSocket.Server({ noServer: true });
 
@@ -502,7 +519,7 @@ wsServer.on('connection', function connection(ws, request) {
 	var character = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, id);
 	character.addPotions(5);
 	ws.send(buildPlayerMsg(character));
-	mobs.push[character];
+	mobs.push(character);
 	console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' joins');
 
 	ws.on('open', function join() {
@@ -512,6 +529,17 @@ wsServer.on('connection', function connection(ws, request) {
 	ws.on('message', function message(msg) {
 		// Do thing with message from client
 		console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' says \"' + msg + '\"');
+		var command = JSON.parse(msg);
+		for(var i = 0; i < mobs.length; i++) {
+			if(mobs[i].uuid == device.get(ws)) {
+				mobs[i].action = new Action(command.action, command.message);
+			}
+		}
+		genTurn();
+		if(clock == null) {
+			console.log(new Date().toUTCString() + ' | starting clock...');
+			clock = setInterval(genTurn, 30000);
+		}
 	});
 
 	ws.on('close', function leave() {

@@ -136,7 +136,7 @@ function parseMessage(message) {
 	var msg = JSON.parse(message);
 	map = msg.map;
 	player = new Player(msg.strength, msg.dexterity, msg.constitution, msg.intelligence, msg.wisdom, msg.level, msg.x, msg.y, msg.floor, msg.hp, msg.ac, msg.potions, msg.armor, msg.weapon, msg.staff);
-	if(msg.msg != "") {
+	if(msg.msg != "" && msg.msg != "undefined") {
 		showMessage(msg.msg);
 	}
 	drawMap();
@@ -299,7 +299,7 @@ function drawMap() {
 		localX++;
 	}
 
-	drawSprite(players[0], 10, 13, false);
+	drawSprite(players[0], 11, 13, false);
 }
 
 /**
@@ -356,6 +356,36 @@ function drawPlayerInfo() {
 	renderText(player.staff.toString(), 31 - boxWidth + 5, 13);
 	renderText(player.armor.toString(), 31 - boxWidth + 5, 14);
 	renderText(player.potions.toString(), 31 - boxWidth + 5, 15);
+
+	if(player.hp <= 0) {
+		drawGameOver();
+	}
+}
+
+function drawGameOver() {
+	for(var i = 0; i < 14; i++) {
+		for(var j = 0; j < 5; j++) {
+			drawSprite(nothing, 5 + i, 17 + j, false);
+			if(i == 0) {
+				drawSprite(border[5], 5, 17 + j, false);
+				drawSprite(border[4], 19, 17 + j, false);
+			}
+		}
+		drawSprite(border[6], 5 + i, 17, false);
+		drawSprite(border[7], 5 + i, 21, false);
+	}
+	drawSprite(border[1], 5, 17, false);
+	drawSprite(border[0], 19, 17, false);
+	drawSprite(border[3], 5, 21, false);
+	drawSprite(border[2], 19, 21, false);
+	drawSprite(tomb, 11, 13, false);
+	renderText("G a m e   O v e r", 8, 19);
+
+	if(websocket) {
+		showMessage('Disconnecting from game');
+		websocket.onerror = websocket.onopen = websocket.onclose = websocket.onmessage = null;
+		websocket.close();
+	}
 }
 
 /**
@@ -426,6 +456,8 @@ function renderText(message, x, y) {
 				sprite = indexSprite(upper, character - 65);
 			} else if(character >= 97 && character <= 122) {
 				sprite = indexSprite(lower, character - 97);
+			} else if(character == 45) {
+				sprite = indexSprite(symbol, 21);
 			}
 			// TODO: Add other symbols
 		}
