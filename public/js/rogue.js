@@ -7,8 +7,23 @@
  * 2019
  */
 
-var gamemap = {};
-var player = {};
+function Player(s, d, c, i , w, lvl, x, y, fl, h, a, p, armor, weapon, staff) {
+	this.strength = s;
+	this.dexterity = d;
+	this.constitution = c;
+	this.intelligence = i;
+	this.wisdom = w;
+	this.level = lvl;
+	this.x = x;
+	this.y = y;
+	this.floor = fl;
+	this.hp = h;
+	this.ac = a;
+	this.potions = p;
+	this.armor = armor;
+	this.weapon = weapon;
+	this.staff = staff;
+}
 
 function Sprite(x, y, width, height) {
 	this.x = x;
@@ -41,7 +56,7 @@ var wall = [
 ];
 
 var stairsdown = new Sprite(12, 26, 16, 16);
-var starisup = new Sprite(13, 26, 16, 16);
+var stairsup = new Sprite(13, 26, 16, 16);
 var tomb = new Sprite(2, 27, 16, 16);
 
 var water = new Sprite(8, 34, 16, 16);
@@ -78,7 +93,7 @@ var heart = new Sprite(7, 55, 16, 16);
 
 /** Mobs **/
 
-var player = [
+var players = [
 	new Sprite(2, 6, 16, 16),
 	new Sprite(2, 7, 16, 16)
 ];
@@ -107,16 +122,25 @@ var space = new Sprite(1, 59, 8, 16);
 const messages = document.querySelector('#messages');
 const joinGame = document.querySelector('#joingame');
 const leaveGame = document.querySelector('#leavegame');
-const wsButton = document.querySelector('#wsButton');
-const wsSendButton = document.querySelector('#wsSendButton');
 let websocket;
 
 /**
- * Show messages from the server
+ * Show messages in message bar
  */
 function showMessage(message) {
     messages.textContent += `\n${message}`;
     messages.scrollTop = messages.scrollHeight;
+}
+
+function parseMessage(message) {
+	var msg = JSON.parse(message);
+	map = msg.map;
+	player = new Player(msg.strength, msg.dexterity, msg.constitution, msg.intelligence, msg.wisdom, msg.level, msg.x, msg.y, msg.floor, msg.hp, msg.ac, msg.potions, msg.armor, msg.weapon, msg.staff);
+	if(msg.msg != "") {
+		showMessage(msg.msg);
+	}
+	drawMap();
+	drawPlayerInfo();
 }
 
 joinGame.onclick = function() {
@@ -133,7 +157,7 @@ joinGame.onclick = function() {
 			websocket = null;
 		};
 		websocket.onmessage = function(event) {
-			showMessage(event.data);
+			parseMessage(event.data);
 		};
 	}
 };
@@ -147,21 +171,68 @@ leaveGame.onclick = function() {
 	
 };
 
-wsSendButton.onclick = function() {
+stairs.onclick = function() {
     if (!websocket) {
-		showMessage('No WebSocket connection');
+		showMessage('Connection error');
 		return;
     }
 
-    websocket.send('Hello World!');
-    showMessage('Sent "Hello World!"');
+    websocket.send("{\"action\":\"move\", \"message\":\".\"}");
 };
+
+drink.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"drink\", \"message\":\"\"}");
+}
+
+up.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"move\", \"message\":\"w\"}");
+}
+
+down.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"move\", \"message\":\"s\"}");
+}
+
+left.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"move\", \"message\":\"a\"}");
+}
+
+right.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"move\", \"message\":\"d\"}");
+}
 
 const canvas = document.getElementById('gameboard');
 const context = canvas.getContext('2d');
 const spritemap = new Image(320, 1264);
 spritemap.onload = drawInitialBoard;
 spritemap.src = 'scroll-o-sprites-edited.png';
+
+var gamemap;
+var player = new Player(10, 10, 10, 10, 10, 1, 0, 0, 1, 100, 15, 0, "none", "none", "none");
 
 function drawInitialBoard() {
 	for(var i = 0; i < 32; i++) {
@@ -184,6 +255,51 @@ function drawInitialBoard() {
 	}
 
 	drawPlayerInfo();
+}
+
+function drawMap() {
+	if(!map || map == "") {
+		return;
+	}
+	var startx = player.x - 11;
+	var starty = player.y - 13;
+	var localX = 0;
+	var localY = 0;
+	for(var i = 0; i < 31; i++) {
+		for(var j = 0; j < 26; j++) {
+			drawSprite(nothing, i, j, false);
+		}
+	}
+	for(var i = startx; i < startx + 22; i++) {
+		for(var j = starty; j < starty + 26; j++) {
+			if(i < 0 || i > 99 || j < 0 || j > 49) {
+				drawSprite(wall[1], localX, localY, false);
+			} else {
+				var symbol = map.charAt(j * 100 + i);
+				switch(symbol) {
+				case '*':
+					drawSprite(wall[0], localX, localY, false);
+					break;
+				case '<':
+					drawSprite(stairsup, localX, localY, false);
+					break;
+				case '>':
+					drawSprite(stairsdown, localX, localY, false);
+					break;
+				case ' ':
+					drawSprite(nothing, localX, localY, false);
+					break;
+				default:
+					break;
+				}
+			}
+			localY++;
+		}
+		localY = 0;
+		localX++;
+	}
+
+	drawSprite(players[0], 10, 13, false);
 }
 
 /**
@@ -219,29 +335,27 @@ function drawPlayerInfo() {
 	renderText("Con", 31 - boxWidth + 2, 5);
 	renderText("Wis", 31 - boxWidth + 6, 3);
 	renderText("Int", 31 - boxWidth + 6, 4);
-	renderText("Cha", 31 - boxWidth + 6, 5);
 	renderText("Lvl", 31 - boxWidth + 6, 7);
 	renderText("Flr", 31 - boxWidth + 6, 8);
-	renderText("Equipped", 31 - boxWidth + 2, 10);
-	renderText("Carried", 31 - boxWidth + 2, 15);
-	
-	renderText("100", 31 - boxWidth + 3, 7);
-	renderText("15", 31 - boxWidth + 3, 8);
-	renderText("10", 31 - boxWidth + 4, 3);
-	renderText("10", 31 - boxWidth + 4, 4);
-	renderText("10", 31 - boxWidth + 4, 5);
-	renderText("10", 31 - boxWidth + 8, 3);
-	renderText("10", 31 - boxWidth + 8, 4);
-	renderText("10", 31 - boxWidth + 8, 5);
-	renderText("1", 31 - boxWidth + 8, 7);
-	renderText("2", 31 - boxWidth + 8, 8);
+	renderText("Equipment", 31 - boxWidth + 2, 10);
 	drawSprite(sword, 31 - boxWidth + 3, 12, false);
-	drawSprite(arrow, 31 - boxWidth + 6, 12, false);
-	drawSprite(helmet, 31 - boxWidth + 3, 13, false);
-	drawSprite(armor, 31 - boxWidth + 6, 13, false);
-	drawSprite(potion, 31 - boxWidth + 3, 17, false);
-	drawSprite(scroll, 31 - boxWidth + 6, 17, false);
-	drawSprite(shield, 31 - boxWidth + 3, 18, false);
+	drawSprite(staff, 31 - boxWidth + 3, 13, false);
+	drawSprite(armor, 31 - boxWidth + 3, 14, false);
+	drawSprite(potion, 31 - boxWidth + 3, 15, false);
+	
+	renderText(player.hp.toString(), 31 - boxWidth + 3, 7);
+	renderText(player.ac.toString(), 31 - boxWidth + 3, 8);
+	renderText(player.strength.toString(), 31 - boxWidth + 4, 3);
+	renderText(player.dexterity.toString(), 31 - boxWidth + 4, 4);
+	renderText(player.constitution.toString(), 31 - boxWidth + 4, 5);
+	renderText(player.wisdom.toString(), 31 - boxWidth + 8, 3);
+	renderText(player.intelligence.toString(), 31 - boxWidth + 8, 4);
+	renderText(player.level.toString(), 31 - boxWidth + 8, 7);
+	renderText(player.floor.toString(), 31 - boxWidth + 8, 8);
+	renderText(player.weapon.toString(), 31 - boxWidth + 5, 12);
+	renderText(player.staff.toString(), 31 - boxWidth + 5, 13);
+	renderText(player.armor.toString(), 31 - boxWidth + 5, 14);
+	renderText(player.potions.toString(), 31 - boxWidth + 5, 15);
 }
 
 /**

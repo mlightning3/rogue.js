@@ -13,11 +13,16 @@
 	  <h1>rogue.js</h1>
 	</div>
 	<canvas id="gameboard" class="center" width="512" height="416"></canvas>
-    <button id="joingame" type="button" title="Join Game">Join Game</button>
-    <button id="leavegame" type="button" title="Leave Game">Leave Game</button>
-    <button id="wsSendButton" type="button" title="Send WebSocket message">
-      Send WebSocket message
-    </button>
+	<div class="center">
+	  <table class="center">
+		<tr><td><button id="joingame" type="button" title="Join Game">Join Game</button></td><td></td><td><button id="up">Up</button></td><td></td><td></td>
+		</tr>
+		<tr><td><button id="leavegame" type="button" title="Leave Game">Leave Game</button></td><td><button id="left">Left</button></td><td><button id="stairs">Stairs</button></td><td><button id="right">Right</button></td><td></td>
+		</tr>
+		<tr><td></td><td></td><td><button id="down">Down</button></td><td></td><td><button id="drink">Potion</button></td>
+		</tr>
+	  </table>
+	</div>
     <pre id="messages" style="height: 400px; overflow: scroll"></pre>
     <footer><p>&copy; Matt Kohls, 2019</footer>
 	<script src="js/rogue.js"></script>

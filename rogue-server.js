@@ -20,7 +20,7 @@ function genStat() {
 	for(var i = 0; i < 3; i++) {
 		value += Math.floor(Math.random() * 5) + 1;
 	}
-	return value;
+	return value + 3;
 }
 
 class Location {
@@ -89,7 +89,7 @@ class Mob {
 		this.level = level;
 		this._location = location;
 		this.xp = 0;
-		this._hp = level * getBonus(constitution) + Math.floor(Math.random() * 6) * level;
+		this._hp = level * getBonus(constitution) + (Math.floor(Math.random() * 5) + 1) * level;
 		if(this._hp < 2) {
 			this._hp = 2;
 		}
@@ -102,32 +102,32 @@ class Mob {
 	}
 
 	stats() {
-		var message = "strength:" + this.strength;
-		message = message + ",dexterity:" + this.dexterity;
-		message = message + ",constitution:" + this.constitution;
-		message = message + ",intelligence:" + this.intelligence;
-		message = message + ",wisdom:" + this.wisdom;
-		message = message + ",level:" + this.level;
-		message = message + ",x:" + this._location.x;
-		message = message + ",y:" + this._location.y;
-		message = message + ",floor:" + this._location.floor;
-		message = message + ",hp:" + this._hp;
-		message = message + ",ac:" + this.ac();
-		message = message + ",potions:" + this.potions;
+		var message = "\"strength\":" + this.strength;
+		message = message + ",\"dexterity\":" + this.dexterity;
+		message = message + ",\"constitution\":" + this.constitution;
+		message = message + ",\"intelligence\":" + this.intelligence;
+		message = message + ",\"wisdom\":" + this.wisdom;
+		message = message + ",\"level\":" + this.level;
+		message = message + ",\"x\":" + this._location.x;
+		message = message + ",\"y\":" + this._location.y;
+		message = message + ",\"floor\":" + this._location.floor;
+		message = message + ",\"hp\":" + this._hp;
+		message = message + ",\"ac\":" + this.ac();
+		message = message + ",\"potions\":" + this.potions;
 		if(this.armor == null) {
-			message = message + ",armor: \"none\"";
+			message = message + ",\"armor\": \"none\"";
 		} else {
-			message = message + ",armor:\"" + this.armor.name + "\"";
+			message = message + ",\"armor\":\"" + this.armor.name + "\"";
 		}
 		if(this.weapon == null) {
-			message = message + ",weapon: \"none\"";
+			message = message + ",\"weapon\": \"none\"";
 		} else {
-			message = message + ",weapon:\"" + this.weapon.name + "\"";
+			message = message + ",\"weapon\":\"" + this.weapon.name + "\"";
 		}
 		if(this.staff == null) {
-			message = message + ",staff: \"none\"";
+			message = message + ",\"staff\": \"none\"";
 		} else {
-			message = message + ",staff:\"" + this.staff.name + "\"";
+			message = message + ",\"staff\":\"" + this.staff.name + "\"";
 		}
 		return message;
 	}
@@ -137,7 +137,7 @@ class Mob {
 		if(this.xp >= 100) {
 			this.xp = 0;
 			this.level += 1;
-			var newhp = getBonus(this.constitution) + Math.floor(Math.random() * 6);
+			var newhp = getBonus(this.constitution) + Math.floor(Math.random() * 5) + 1;
 			if(newhp < 1) {
 				newhp = 1;
 			}
@@ -145,10 +145,14 @@ class Mob {
 		}
 	}
 
+	addPotions(value) {
+		this.potions += value;
+	}
+
 	drinkPotion() {
 		if(this.potions > 0) {
 			this.potions -= 1;
-			var gained = Math.floor(Math.random() * 6) * this.level;
+			var gained = (Math.floor(Math.random() * 5) + 1) * this.level;
 			if(this.hp + gained > this.hpMax) {
 				this.hp = this.hpMax;
 				return "You feel brand new";
@@ -208,28 +212,40 @@ class Mob {
 	attack(type) {
 		if(type == "weapon") {
 			if(this.weapon != null) {
-				return getBonus(this.strength) + this.weapon.bonus + Math.floor(Math.random() * 20);
+				return getBonus(this.strength) + this.weapon.bonus + Math.floor(Math.random() * 19) + 1;
 			}
-			return getBonus(this.strength) + Math.floor(Math.random() * 20);
+			return getBonus(this.strength) + Math.floor(Math.random() * 19) + 1;
 		} else if(type == "staff") {
 			if(this.staff != null) {
-				return getBonus(this.intelligence) + this.staff.bonus + Math.floor(Math.random() * 20);
+				return getBonus(this.intelligence) + this.staff.bonus + Math.floor(Math.random() * 19) + 1;
 			}
-			return getBonus(this.intelligence) + Math.floor(Math.random() * 20);
+			return getBonus(this.intelligence) + Math.floor(Math.random() * 19) + 1;
 		}
 	}
 
 	damage(type) {
 		if(type == "weapon") {
+			var value;
 			if(this.weapon != null) {
-				return getBonus(this.strength) + this.weapon.bonus + Math.floor(Math.random() * 6);
+				value = getBonus(this.strength) + this.weapon.bonus + Math.floor(Math.random() * 5) + 1;
+			} else {
+				value = getBonus(this.strength) + Math.floor(Math.random() * 5) + 1;
 			}
-			return getBonus(this.strength) + Math.floor(Math.random() * 6);
+			if(value < 1) {
+				return 1;
+			}
+			return value;
 		} else if(type == "staff") {
+			var value;
 			if(this.staff != null) {
-				return getBonus(this.intelligence) + this.staff.bonus + Math.floor(Math.random() * 6);
+				value = getBonus(this.intelligence) + this.staff.bonus + Math.floor(Math.random() * 5) + 1;
+			} else {
+				value = getBonus(this.intelligence) + Math.floor(Math.random() * 5) + 1;
 			}
-			return getBonus(this.intelligence) + Math.floor(Math.random() * 6);
+			if(value < 1) {
+				return 1;
+			}
+			return value;
 		}
 	}
 
@@ -296,6 +312,9 @@ function getInititive() {
 	return init
 }
 
+/**
+ * Performs an attack by mobA against mobB
+ */
 function attack(mobA, mobB, type) {
 	var attack = mobs[mobA].attack(type);
 	var defence;
@@ -315,6 +334,9 @@ function attack(mobA, mobB, type) {
 	}
 }
 
+/** 
+ * Moves a mob in the direction it wishes to that space if available or starts a fight
+ */
 function move(mob, dir) {
 	var location = mobs[mob].location;
 	switch(dir) {
@@ -368,9 +390,12 @@ function move(mob, dir) {
 }
 
 function cast(mob, dir) {
-
+	// TODO: All that magic jazz
 }
 
+/**
+ * Runs through all the actions each mob wishes to take
+ */
 function performActions(init) {
 	for(var i = init.length - 1; i > -1; i--) {
 		for(var j = 0; j < init[i].length; j++) {
@@ -391,6 +416,7 @@ function performActions(init) {
 					message = mobs[mob].drinkPotion();
 					break;
 				case 'pick':
+					// TODO: Allow for pickups boi
 					//message = mobs[init[i][j]].pickUp();
 					break;
 				case 'drop':
@@ -405,16 +431,26 @@ function performActions(init) {
 	}
 }
 
+/**
+ * Generate a message to be sent to client based on character
+ *
+ * @param character The mob the player is in charge of
+ */
 function buildPlayerMsg(character) {
 	var local = character.location.floor;
-	var message = "{map:\"" + floors[local] + "\",";
+	var message = "{\"map\":\"" + floors[local] + "\",";
 	message = message + character.stats();
 	if(character.action != null) {
-		message = message + "msg:\"" + character.action.message + "\"";
+		message = message + ",\"msg\":" + character.action.message;
+	} else {
+		message = message + ",\"msg\":\"\"";
 	}
 	return message + "}";
 }
 
+/**
+ * Send out action results to all players
+ */
 function sendResults() {
 	for(var i = 0; i < mobs.length; i++) {
 		if(players.has(mobs[i].uuid)) {
@@ -423,14 +459,25 @@ function sendResults() {
 	}
 }
 
+/**
+ * Removes dead mobs from the mob list
+ */
+function cleanDungeon() {
+	for(var i = 0; i < dead.length; i++) {
+		mobs.splice(dead[i], 1); 
+	}
+}
 
+/**
+ * All the steps that need to be taken in a turn
+ */
 function genTurn() {
 	dead = new Array();
 
 	var init = getInititive();
 	performActions(init);
 	sendResults();
-
+	cleanDungeon();
 }
 
 
@@ -453,6 +500,7 @@ wsServer.on('connection', function connection(ws, request) {
 	device.set(ws, id);
 	var local = new Location(78, 5, 0);
 	var character = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, id);
+	character.addPotions(5);
 	ws.send(buildPlayerMsg(character));
 	mobs.push[character];
 	console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' joins');
@@ -468,8 +516,14 @@ wsServer.on('connection', function connection(ws, request) {
 
 	ws.on('close', function leave() {
 		console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' leaves');
-		players.delete(device.get(ws));
+		var id = device.get(ws);
+		players.delete(id);
 		device.delete(ws);
+		for(var i = 0; i < mobs.length; i++) {
+			if(mobs[i].uuid = id) {
+				dead.push(i);
+			}
+		}
 	});
 });
 
