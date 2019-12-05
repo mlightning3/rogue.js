@@ -120,30 +120,31 @@ function showMessage(message) {
 }
 
 joinGame.onclick = function() {
-	// TODO if we need this
+	if (!websocket) {
+		websocket = new WebSocket(`ws://localhost:8080`);
+		websocket.onerror = function() {
+			showMessage('Communication error');
+		};
+		websocket.onopen = function() {
+			showMessage('Game joined');
+		};
+		websocket.onclose = function() {
+			showMessage('Disconnected from game');
+			websocket = null;
+		};
+		websocket.onmessage = function(event) {
+			showMessage(event.data);
+		};
+	}
 };
 
 leaveGame.onclick = function() {
-	// TODO if we need this
-};
-
-wsButton.onclick = function() {
-	if (websocket) {
-		websocket.onerror = websocket.onopen = websocket.onclose = null;
+	if(websocket) {
+		showMessage('Disconnecting from game');
+		websocket.onerror = websocket.onopen = websocket.onclose = websocket.onmessage = null;
 		websocket.close();
-    }
-
-    websocket = new WebSocket(`ws://localhost:8080`);
-    websocket.onerror = function() {
-		showMessage('WebSocket error');
-    };
-    websocket.onopen = function() {
-		showMessage('WebSocket connection established');
-    };
-    websocket.onclose = function() {
-		showMessage('WebSocket connection closed');
-		websocket = null;
-    };
+	}
+	
 };
 
 wsSendButton.onclick = function() {

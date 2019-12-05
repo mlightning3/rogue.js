@@ -18,24 +18,24 @@ function getBonus(value) {
 function genStat() {
 	var value = 0;
 	for(var i = 0; i < 3; i++) {
-		value += Math.floor(Math.random() * 6);
+		value += Math.floor(Math.random() * 5) + 1;
 	}
 	return value;
 }
 
 class Location {
 	constructor(x, y, floor) {
-		this.x = x;
-		this.y = y;
-		this.floor = floor;
+		this._x = x;
+		this._y = y;
+		this._floor = floor;
 	}
 
-	get x() { return this.x; }
-	set x(value) { this.x = value; }
-	get y() { return this.y; }
-	set y(value) { this.y = value; }
-	get floor() { return this.floor; }
-	set floor(value) { this.floor = value; }
+	get x() { return this._x; }
+	set x(value) { this._x = value; }
+	get y() { return this._y; }
+	set y(value) { this._y = value; }
+	get floor() { return this._floor; }
+	set floor(value) { this._floor = value; }
 }
 
 class Item {
@@ -45,7 +45,7 @@ class Item {
 	}
 
 	get name() {
-		var name = this.type + " ";
+		var name = "";
 		if(this.bonus > 0) {
 			name = name + "+" + this.bonus;
 		} else if(this.bonus < 0) {
@@ -80,21 +80,56 @@ class Action {
 	
 
 class Mob {
-	constuctor(strength, dexterity, constitution, intelligence, wisdom, level, location) {
+	constructor(strength, dexterity, constitution, intelligence, wisdom, level, location, uuid) {
 		this.strength = strength;
 		this.dexterity = dexterity;
 		this.constitution = constitution;
 		this.intelligence = intelligence;
 		this.wisdom = wisdom;
 		this.level = level;
-		this.location = location;
+		this._location = location;
 		this.xp = 0;
-		this.hp = level * getBonus(constitution) + Math.floor(Math.random() * 6) * level;
-		this.hpMax = this.hp;
+		this._hp = level * getBonus(constitution) + Math.floor(Math.random() * 6) * level;
+		if(this._hp < 2) {
+			this._hp = 2;
+		}
+		this.hpMax = this._hp;
 		this.potions = 0;
 		this.armor = null;
 		this.weapon = null;
 		this.staff = null;
+		this._uuid = uuid;
+	}
+
+	stats() {
+		var message = "strength:" + this.strength;
+		message = message + ",dexterity:" + this.dexterity;
+		message = message + ",constitution:" + this.constitution;
+		message = message + ",intelligence:" + this.intelligence;
+		message = message + ",wisdom:" + this.wisdom;
+		message = message + ",level:" + this.level;
+		message = message + ",x:" + this._location.x;
+		message = message + ",y:" + this._location.y;
+		message = message + ",floor:" + this._location.floor;
+		message = message + ",hp:" + this._hp;
+		message = message + ",ac:" + this.ac();
+		message = message + ",potions:" + this.potions;
+		if(this.armor == null) {
+			message = message + ",armor: \"none\"";
+		} else {
+			message = message + ",armor:\"" + this.armor.name + "\"";
+		}
+		if(this.weapon == null) {
+			message = message + ",weapon: \"none\"";
+		} else {
+			message = message + ",weapon:\"" + this.weapon.name + "\"";
+		}
+		if(this.staff == null) {
+			message = message + ",staff: \"none\"";
+		} else {
+			message = message + ",staff:\"" + this.staff.name + "\"";
+		}
+		return message;
 	}
 
 	addXP(amount) {
@@ -102,7 +137,11 @@ class Mob {
 		if(this.xp >= 100) {
 			this.xp = 0;
 			this.level += 1;
-			this.hpMax += getBonus(this.constitution) + Math.floor(Math.random() * 6);
+			var newhp = getBonus(this.constitution) + Math.floor(Math.random() * 6);
+			if(newhp < 1) {
+				newhp = 1;
+			}
+			this.hpMax += newhp;
 		}
 	}
 
@@ -122,47 +161,49 @@ class Mob {
 		}
 	}
 
-	get inititive() {
+	inititive() {
 		return getBonus(this.dexterity) + this.level + 10;
 	}
 
-	get ac() {
-		if(armor != null) {
+	ac() {
+		if(this.armor != null) {
 			return 10 + getBonus(this.dexterity) + this.armor.bonus;
 		}
 		return 10 + getBonus(this.dexterity);
 	}
 
-	get spellResist() {
-		if(staff != null) {
+	spellResist() {
+		if(this.staff != null) {
 			return 10 + getBonus(this.wisdom) + this.staff.bonus;
 		}
 		return 10 + getBonus(this.wisdom);
 	}
 
 	get hp() {
-		return this.hp;
+		return this._hp;
 	}
 
 	set hp(value) {
-		this.hp = value;
+		this._hp = value;
 	}
 
 	get location() {
-		return this.location;
+		return this._location;
 	}
 
 	set location(value) {
-		this.location = value;
+		this._location = value;
 	}
 
 	set action(value) {
-		this.action = value;
+		this._action = value;
 	}
 
 	get action() {
-		return this.action;
+		return this._action;
 	}
+
+	get uuid() { return this._uuid; }
 
 	attack(type) {
 		if(type == "weapon") {
@@ -364,8 +405,22 @@ function performActions(init) {
 	}
 }
 
-function sendResults() {
+function buildPlayerMsg(character) {
+	var local = character.location.floor;
+	var message = "{map:\"" + floors[local] + "\",";
+	message = message + character.stats();
+	if(character.action != null) {
+		message = message + "msg:\"" + character.action.message + "\"";
+	}
+	return message + "}";
+}
 
+function sendResults() {
+	for(var i = 0; i < mobs.length; i++) {
+		if(players.has(mobs[i].uuid)) {
+			players.get(mobs[i].uuid).send(buildPlayerMsg(mobs[i]));
+		}
+	}
 }
 
 
@@ -387,13 +442,20 @@ const uuid = require('uuid/v4');
 
 // Used to keep track of all the players and their connection
 const players = new Map();
+const device = new Map();
 
 const httpServer = http.createServer();
 const wsServer = new WebSocket.Server({ noServer: true });
 
 wsServer.on('connection', function connection(ws, request) {
-	players.set(ws, uuid());
-	console.log(new Date().toUTCString() + ' | ' + players.get(ws) + ' joins');
+	var id = uuid();
+	players.set(id, ws);
+	device.set(ws, id);
+	var local = new Location(78, 5, 0);
+	var character = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, id);
+	ws.send(buildPlayerMsg(character));
+	mobs.push[character];
+	console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' joins');
 
 	ws.on('open', function join() {
 		// Do things on an open, doesn't seem to get hit though
@@ -401,12 +463,13 @@ wsServer.on('connection', function connection(ws, request) {
 	
 	ws.on('message', function message(msg) {
 		// Do thing with message from client
-		console.log(new Date().toUTCString() + ' | ' + players.get(ws) + ' says \"' + msg + '\"');
+		console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' says \"' + msg + '\"');
 	});
 
 	ws.on('close', function leave() {
-		console.log(new Date().toUTCString() + ' | ' + players.get(ws) + ' leaves');
-		clients.delete(ws);
+		console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' leaves');
+		players.delete(device.get(ws));
+		device.delete(ws);
 	});
 });
 
