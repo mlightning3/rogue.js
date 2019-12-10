@@ -46,10 +46,10 @@ class Item {
 
 	get name() {
 		var name = "";
-		if(this._bonus > 0) {
+		if(this._bonus >= 0) {
 			name = name + "+" + this._bonus;
 		} else if(this.bonus < 0) {
-			name = name + "-" +this._bonus;
+			name = name + this._bonus;
 		}
 		return name;
 	}
@@ -80,7 +80,7 @@ class Action {
 	
 
 class Mob {
-	constructor(strength, dexterity, constitution, intelligence, wisdom, level, location, uuid) {
+	constructor(strength, dexterity, constitution, intelligence, wisdom, level, location, uuid, type) {
 		this.strength = strength;
 		this.dexterity = dexterity;
 		this.constitution = constitution;
@@ -99,6 +99,7 @@ class Mob {
 		this.weapon = null;
 		this.staff = null;
 		this._uuid = uuid;
+		this._type = type;
 	}
 
 	stats() {
@@ -209,6 +210,8 @@ class Mob {
 
 	get uuid() { return this._uuid; }
 
+	get type() { return this._type; }
+
 	attack(type) {
 		if(type == "weapon") {
 			if(this.weapon != null) {
@@ -283,6 +286,14 @@ class Mob {
 			return "Aquired: " + item.name;
 		}
 	}
+
+	hasStaff() {
+		if(this.staff != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
 
 /** Turn generation **/
@@ -355,20 +366,30 @@ function move(mob, dir) {
 		location.x = location.x + 1;
 		break;
 	case '.':
-		var symbol = floors[location.floor].charAt(location.y * 100 + location.x);
+		var symbol = floors.maps[location.floor].charAt(location.y * 100 + location.x);
 		if(symbol == '>') {
-			location.floor = location.floor + 1;
-			if(location.floor > floors.length - 1) {
-				return "Already at bottom floor";
+			var newfloor = location.floor + 1;
+			if(newfloor > floors.maps.length - 1) {
+				if(mobs[mob].hasStaff()) {
+					return "You look again, but you already found the staff";
+				} else {
+					mobs[mob].pickUp(new Item(5, "staff"));
+					return "Hiding behind the fake stairs was THE STAFF! Return through the stairs on the top floor!";
+				}
 			}
-			mobs[mob].location = location;
+			mobs[mob].location = new Location(floors.stairs[newfloor].ux, floors.stairs[newfloor].uy, newfloor);
 			return "Go down the stairs";
 		} else if(symbol == '<') {
-			location.floor = location.floor - 1;
-			if(location.floor < 0) {
-				return "Already at top floor";
+			var newfloor = location.floor - 1;
+			if(newfloor < 0) {
+				if(mobs[mob].hasStaff()) {
+					// TODO: Add some flag for exiting dungeon
+					return "You exit the dungeon, wielding THE STAFF!";
+				} else {
+					return "You don't want to give up finding the staff already";
+				}
 			}
-			mobs[mob].location = location;
+			mobs[mob].location = new Location(floors.stairs[newfloor].dx, floors.stairs[newfloor].dy, newfloor);
 			return "Go up the stairs";
 		}
 		break;
@@ -378,7 +399,7 @@ function move(mob, dir) {
 	if(location.x < 0 || location.x > 99 || location.y < 0 || location.y > 39) {
 		return "Hit a wall";
 	}
-	if(floors[location.floor].charAt(location.y * 100 + location.x) == '*') {
+	if(floors.maps[location.floor].charAt(location.y * 100 + location.x) == '*') {
 		return "Hit a wall";
 	}
 	for(var i = 0; i < mobs.length; i++) {
@@ -407,32 +428,36 @@ function performActions(init) {
 				if(mobs[mob].action == null) {
 					message = "You sit";
 				}
-				switch(mobs[mob].action.type) {
-				case 'wait':
-					message = "You sit";
-					break;
-				case 'move':
-					message = move(mob, mobs[mob].action.message);
-					break;
-				case 'cast':
-					cast(mob, mobs[mob].action.message);
-					break;
-				case 'drink':
-					message = mobs[mob].drinkPotion();
-					break;
-				case 'pick':
-					// TODO: Allow for pickups boi
-					//message = mobs[init[i][j]].pickUp();
-					break;
-				case 'drop':
-					message = "Item dropped";
-					mobs[mob].drop(mobs[mob].action.message);
-				default:
-					message = "You sit";
-					break;
+				if(typeof mobs[mob].action !== 'undefined' || mobs[mob] != null) {
+					switch(mobs[mob].action.type) {
+					case 'wait':
+						message = "You sit";
+						break;
+					case 'move':
+						message = move(mob, mobs[mob].action.message);
+						break;
+					case 'cast':
+						cast(mob, mobs[mob].action.message);
+						break;
+					case 'drink':
+						message = mobs[mob].drinkPotion();
+						break;
+					case 'pick':
+						// TODO: Allow for pickups boi
+						//message = mobs[init[i][j]].pickUp();
+						break;
+					case 'drop':
+						message = "Item dropped";
+						mobs[mob].drop(mobs[mob].action.message);
+					default:
+						message = "You sit";
+						break;
+					}
 				}
 			}
-			mobs[mob].action = new Action('done', message);
+			if(mobs[mob] != null) {
+				mobs[mob].action = new Action('done', message);
+			}
 		}
 	}
 }
@@ -448,7 +473,7 @@ function buildPlayerMsg(character) {
 
 function buildTurnMsg(character, mobmsg) {
 	var local = character.location.floor;
-	var message = "{\"map\":\"" + floors[local] + "\",";
+	var message = "{\"map\":\"" + floors.maps[local] + "\",";
 	message = message + character.stats();
 	if(character.action != null) {
 		message = message + ",\"msg\":\"" + character.action.message + "\"";
@@ -465,7 +490,7 @@ function buildTurnMsg(character, mobmsg) {
 function sendResults() {
 	var mobmsg = ",\"mobs\":[";
 	for(var i = 0; i < mobs.length; i++) {
-		mobmsg += "{\"x\":" + mobs[i].location.x + ",\"y\":" + mobs[i].location.y + ",\"floor\":" + mobs[i].location.floor + "}";
+		mobmsg += "{\"x\":" + mobs[i].location.x + ",\"y\":" + mobs[i].location.y + ",\"floor\":" + mobs[i].location.floor + ",\"type\":\"" + mobs[i].type + "\"}";
 		if(i != mobs.length - 1) {
 			mobmsg += ",";
 		}
@@ -529,8 +554,24 @@ wsServer.on('connection', function connection(ws, request) {
 	players.set(id, ws);
 	device.set(ws, id);
 	var local = new Location(78, 5, 0);
-	var character = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, id);
+	var character = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, id, "player");
 	character.addPotions(5);
+	var rand = Math.floor(Math.random() * 19) + 1;
+	if(rand > 15) {
+		character.pickUp(new Item(1, "weapon"));
+	} else if(rand == 1) {
+		character.pickUp(new Item(-1, "weapon"));
+	} else {
+		character.pickUp(new Item(0, "weapon"));
+	}
+	rand = Math.floor(Math.random() * 19) + 1;
+	if(rand > 15) {
+		character.pickUp(new Item(1, "armor"));
+	} else if(rand == 1) {
+		character.pickUp(new Item(-1, "armor"));
+	} else {
+		character.pickUp(new Item(0, "armor"));
+	}
 	ws.send(buildPlayerMsg(character));
 	mobs.push(character);
 	console.log(new Date().toUTCString() + ' | ' + device.get(ws) + ' joins');

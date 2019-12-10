@@ -242,19 +242,35 @@ function drawInitialBoard() {
 			drawSprite(nothing, i, j, false);
 		}
 	}
-	for(var i = 5; i < 30; i++) {
-		for(var j = 2; j < 10; j++) {
-			drawSprite(dirt, i, j, false);
-		}
-	}
 	for(var i = 0; i < 32; i++) {
 		drawSprite(wall[0], i, 0, false);
-		drawSprite(wall[1], i, 25, false);
+		drawSprite(wall[0], i, 25, false);
 	}
 	for(var j = 0; j < 26; j++) {
-		drawSprite(wall[2], 0, j, false);
-		drawSprite(wall[2], 31, j, false);
+		drawSprite(wall[0], 0, j, false);
 	}
+
+	drawSprite(players[0], 4, 7, false);
+	renderText("This is you", 6, 7);
+	drawSprite(players[1], 4, 8, false);
+	renderText("These are other players", 6, 8);
+	drawSprite(zombie, 4, 9, false);
+	renderText("Watch out for monsters", 6, 9);
+
+	drawSprite(stairsup, 4, 11, false);
+	drawSprite(stairsdown, 4, 12, false);
+	renderText("Stairs allow you to move", 6, 11);
+	renderText("between floors", 6, 12);
+
+	drawSprite(potion, 4, 14, false);
+	renderText("Using a potion heals you", 6, 14);
+	drawSprite(sword, 4, 15, false);
+	renderText("Moving into someone attacks", 6, 15);
+	renderText("them", 6, 16);
+
+	drawSprite(staff, 4, 18, false);
+	renderText("Find the staff and return", 6, 18);
+	renderText("to the surface", 6, 19);
 
 	drawPlayerInfo();
 }
@@ -305,7 +321,22 @@ function drawMap() {
 		if(mobs[i].floor == player.floor) {
 			var mobx = mobs[i].x - player.x;
 			var moby = mobs[i].y - player.y;
-			drawSprite(players[1], 11 + mobx, 13 + moby, false);
+			var sprite;
+			switch(mobs[i].type) {
+			case "player":
+				sprite = players[1];
+				break;
+			case "zombie":
+				sprite = zombie;
+				break;
+			case "slime":
+				sprite = slime;
+				break;
+			default:
+				sprite = rat;
+				break;
+			}
+			drawSprite(sprite, 11 + mobx, 13 + moby, false);
 		}
 	}
 
@@ -468,6 +499,16 @@ function renderText(message, x, y) {
 				sprite = indexSprite(lower, character - 97);
 			} else if(character == 45) {
 				sprite = indexSprite(symbol, 21);
+			} else if(character == 43) {
+				sprite = indexSprite(symbol, 20);
+			} else if(character == 46) {
+				sprite = indexSprite(symbol, 5);
+			} else if(character == 44) {
+				sprite = indexSprite(symbol, 6);
+			} else if(character == 33) {
+				sprite = indexSprite(symbol, 7);
+			} else if(character == 63) {
+				sprite = indexSprite(symbol, 8);
 			}
 			// TODO: Add other symbols
 		}
