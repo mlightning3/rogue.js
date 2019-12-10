@@ -298,6 +298,7 @@ class Mob {
 
 /** Turn generation **/
 
+var npc = [0, 0, 0]; // Number of NPCs per floor (more will be allowed on lower floors)
 var mobs = [];
 var dead = [];
 const floors = require('./floors.json');
@@ -391,6 +392,8 @@ function move(mob, dir) {
 			}
 			mobs[mob].location = new Location(floors.stairs[newfloor].dx, floors.stairs[newfloor].dy, newfloor);
 			return "Go up the stairs";
+		} else {
+			return "You don't see any stairs here";
 		}
 		break;
 	default:
@@ -428,7 +431,7 @@ function performActions(init) {
 				if(mobs[mob].action == null) {
 					message = "You sit";
 				}
-				if(typeof mobs[mob].action !== 'undefined' || mobs[mob] != null) {
+				if(mobs[mob] != null && typeof mobs[mob].action !== 'undefined') {
 					switch(mobs[mob].action.type) {
 					case 'wait':
 						message = "You sit";
@@ -509,7 +512,75 @@ function sendResults() {
  */
 function cleanDungeon() {
 	for(var i = 0; i < dead.length; i++) {
+		if(mobs[dead[i]] != null && mobs[dead[i]].type !== 'undefined' && mobs[dead[i]].type !== "player") {
+			npc[mobs[dead[i]].location.floor] = npc[mobs[dead[i]].location.floor] - 1;
+		}
 		mobs.splice(dead[i], 1); 
+	}
+}
+
+/**
+ * Gives non-player character actions
+ */
+function moveNPC(mob) {
+	if(mobs[mob] != null && mobs[mob].type !== 'undefined') {
+		var action = null;
+		switch(mobs[mob].type) {
+		case "slime":
+			action = new Action("wait", "");
+			break;
+		case "zombie":
+			switch(Math.floor(Math.random() * 5)) {
+			case 0:
+				action = new Action("wait", "");
+				break;
+			case 1:
+				action = new Action("move", "w");
+				break;
+			case 2:
+				action = new Action("move", "a");
+				break;
+			case 3:
+				action = new Action("move", "s");
+				break;
+			case 4:
+				action = new Action("move", "d");
+				break;
+			}
+			break;
+		default:
+			mobs[mob].action = new Action("wait", "");
+			break;
+		}
+		mobs[mob].action = action;
+	}
+}
+
+/**
+ * Spawns in new non-player characters on floors that have room for them
+ */
+function spawnNPC() {
+	for(var level = 0; level < floors.maps.length; level++) {
+		if(npc[level] < 15 + level * 5 && Math.floor(Math.random() * 6) > 3) {
+			// Find a spawn location that is not a wall
+			var x = Math.floor(Math.random() * 100);
+			var y = Math.floor(Math.random() * 40);
+			while(floors.maps[level].charAt(y * 100 + x) == '*') {
+				x = Math.floor(Math.random() * 100);
+				y = Math.floor(Math.random() * 40);
+			}
+			// Decide what type of NPC to spawn
+			var temp = Math.floor(Math.random() * 6);
+			var type = "slime";
+			if(temp > 2) {
+				type = "zombie";
+			}
+			var local = new Location(x, y, level);
+			var monster = new Mob(genStat(), genStat(), genStat(), genStat(), genStat(), 1, local, uuid(), type);
+			mobs.push(monster);
+			npc[level] += 1;
+			console.log(new Date().toUTCString() + ' | new monster spawned: ' + type + " floor: " + level);
+		}
 	}
 }
 
@@ -522,13 +593,19 @@ function genTurn() {
 	}
 	console.log(new Date().toUTCString() + ' | generating turn...');
 	dead = new Array();
+	for(var i = 0; i < mobs.length; i++) {
+		if(mobs[i] != null && mobs[i].type !== 'undefined' && mobs[i].type != "player") {
+			moveNPC(i);
+		}
+	}
+	spawnNPC();
 	var init = getInititive();
 	performActions(init);
 	sendResults();
 	cleanDungeon();
 	console.log(new Date().toUTCString() + ' | turn generation done');
-	if(mobs.length > 0) {
-		clock = setInterval(genTurn, 30000);
+	if(players.size > 0) {
+		clock = setInterval(genTurn, 5000);
 		console.log(new Date().toUTCString() + ' | resetting clock...');
 	}
 }
@@ -592,7 +669,7 @@ wsServer.on('connection', function connection(ws, request) {
 		genTurn();
 		if(clock == null) {
 			console.log(new Date().toUTCString() + ' | starting clock...');
-			clock = setInterval(genTurn, 30000);
+			clock = setInterval(genTurn, 5000);
 		}
 	});
 
@@ -602,7 +679,7 @@ wsServer.on('connection', function connection(ws, request) {
 		players.delete(id);
 		device.delete(ws);
 		for(var i = 0; i < mobs.length; i++) {
-			if(mobs[i].uuid = id) {
+			if(mobs[i].uuid == id) {
 				dead.push(i);
 			}
 		}

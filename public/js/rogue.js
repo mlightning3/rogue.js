@@ -142,6 +142,12 @@ function parseMessage(message) {
 	}
 	drawMap();
 	drawPlayerInfo();
+	if(msg.msg === "You exit the dungeon, wielding THE STAFF!") {
+		drawMessageBox(scroll, "Congrats! You win!", 8, 19);
+	}
+	if(player.hp <= 0) {
+		drawMessageBox(tomb, "G a m e   O v e r", 8, 19);
+	}
 }
 
 joinGame.onclick = function() {
@@ -224,6 +230,15 @@ right.onclick = function() {
     }
 
     websocket.send("{\"action\":\"move\", \"message\":\"d\"}");
+}
+
+wait.onclick = function() {
+	if (!websocket) {
+		showMessage('Connection error');
+		return;
+    }
+
+    websocket.send("{\"action\":\"wait\", \"message\":\" \"}");
 }
 
 const canvas = document.getElementById('gameboard');
@@ -397,13 +412,9 @@ function drawPlayerInfo() {
 	renderText(player.staff.toString(), 31 - boxWidth + 5, 13);
 	renderText(player.armor.toString(), 31 - boxWidth + 5, 14);
 	renderText(player.potions.toString(), 31 - boxWidth + 5, 15);
-
-	if(player.hp <= 0) {
-		drawGameOver();
-	}
 }
 
-function drawGameOver() {
+function drawMessageBox(sprite, message, x, y) {
 	for(var i = 0; i < 14; i++) {
 		for(var j = 0; j < 5; j++) {
 			drawSprite(nothing, 5 + i, 17 + j, false);
@@ -419,8 +430,8 @@ function drawGameOver() {
 	drawSprite(border[0], 19, 17, false);
 	drawSprite(border[3], 5, 21, false);
 	drawSprite(border[2], 19, 21, false);
-	drawSprite(tomb, 11, 13, false);
-	renderText("G a m e   O v e r", 8, 19);
+	drawSprite(sprite, 11, 13, false);
+	renderText(message, x, y);
 
 	if(websocket) {
 		showMessage('Disconnecting from game');
